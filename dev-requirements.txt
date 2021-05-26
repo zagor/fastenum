@@ -1,0 +1,10 @@
+pytest==6.0.1
+pytest-benchmark==3.2.3
+pytest-cov==2.10.0
+pytest-mypy-plugins==1.4.0
+ql-cq==0.26.0
+ql-orange==1.1.0
+# We have to pin this explicitly because pip is prone to picking up the unbounded 'mypy>=0.730' requirement
+# from 'pytest-mypy-plugins' instead of the pin from ql-cq. Looking forward to the new pip resolver...
+mypy==0.740
+pre-commit==2.6.0

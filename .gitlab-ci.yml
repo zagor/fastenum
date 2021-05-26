@@ -1,0 +1,27 @@
+before_script:
+  - 'pip install --upgrade pip wheel'
+  - 'pip install -r requirements.txt -r dev-requirements.txt'
+
+image: python:3.7.2
+
+variables:
+  PYTHONPATH: '.'
+
+
+.base: &base
+  tags:
+    - 'docker'
+  except:
+    - tags
+
+
+code-quality:
+  <<: *base
+  script:
+    - 'cq'
+
+
+unittest:
+  <<: *base
+  script:
+    - 'pytest'
