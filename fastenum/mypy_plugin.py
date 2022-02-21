@@ -50,7 +50,7 @@ So this way we will collide with the original Enum definition in the Python stan
 - which should still work with our plugin however.
 '''
 
-from typing import Type, Optional, Callable, List, Union
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 from mypy import nodes, types
 import mypy.plugin
@@ -280,8 +280,8 @@ def transform_enum_class_def(context: mypy.plugin.ClassDefContext) -> None:
 		'__next__',
 		[
 			nodes.Argument(
-				nodes.Var('self', self_type),
-				self_type,
+				nodes.Var('self', metaclass_type),
+				metaclass_type,
 				None,
 				nodes.ARG_POS,
 			),
@@ -486,7 +486,7 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 	)
 	meta_info.names['_EnumMetaType'] = nodes.SymbolTableNode(nodes.MDEF, self_tvar_expr)
 
-	tvar_def_args = (
+	tvar_def_args: Tuple[Any, ...] = (
 		'_EnumMetaType',
 		f'{get_fullname(meta_info)}._EnumMetaType',
 		-1,

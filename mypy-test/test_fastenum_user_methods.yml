@@ -16,6 +16,6 @@
 
 
 
-    reveal_type(Color('RED')) # N: Revealed type is 'main.Color'
-    reveal_type(Color('RED').prop) # N: Revealed type is 'builtins.bool'
-    reveal_type(Color('RED').is_true()) # N: Revealed type is 'builtins.bool'
+    reveal_type(Color('RED')) # N: Revealed type is "main.Color"
+    reveal_type(Color('RED').prop) # N: Revealed type is "builtins.bool"
+    reveal_type(Color('RED').is_true()) # N: Revealed type is "builtins.bool"

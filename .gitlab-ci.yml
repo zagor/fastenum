@@ -2,7 +2,7 @@ before_script:
   - 'pip install --upgrade pip wheel'
   - 'pip install -r requirements.txt -r dev-requirements.txt'
 
-image: python:3.7.2
+image: python:3.8.12
 
 variables:
   PYTHONPATH: '.'

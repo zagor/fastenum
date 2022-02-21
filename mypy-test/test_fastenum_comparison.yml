@@ -9,4 +9,4 @@
 
 
     result = Color('RED') > Color('BLUE')
-    reveal_type(result) # N: Revealed type is 'builtins.bool'
+    reveal_type(result) # N: Revealed type is "builtins.bool"

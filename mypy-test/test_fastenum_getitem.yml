@@ -14,5 +14,5 @@
         C = 'c'
 
 
-    reveal_type(Color['RED']) # N: Revealed type is 'main.Color'
-    reveal_type(Strings['A']) # N: Revealed type is 'main.Strings'
+    reveal_type(Color['RED']) # N: Revealed type is "main.Color"
+    reveal_type(Strings['A']) # N: Revealed type is "main.Strings"
