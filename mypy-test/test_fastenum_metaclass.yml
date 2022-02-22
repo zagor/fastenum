@@ -26,10 +26,10 @@
     class Child(ExampleClass):
       pass
 
-    reveal_type(ExampleClass.hello()) # N: Revealed type is 'Type[main.ExampleClass*]'
-    reveal_type(Child.hello()) # N: Revealed type is 'Type[main.Child*]'
+    reveal_type(ExampleClass.hello()) # N: Revealed type is "Type[main.ExampleClass*]"
+    reveal_type(Child.hello()) # N: Revealed type is "Type[main.Child*]"
 
-    reveal_type(Child.example()) # N: Revealed type is 'builtins.str'
+    reveal_type(Child.example()) # N: Revealed type is "builtins.str"
 
     for i in Child:
-      reveal_type(i) # N: Revealed type is 'builtins.str'
+      reveal_type(i) # N: Revealed type is "builtins.str"

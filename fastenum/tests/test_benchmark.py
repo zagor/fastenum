@@ -1,5 +1,4 @@
-from typing import Union, Type
-
+from typing import Type, Union
 import enum
 
 import pytest

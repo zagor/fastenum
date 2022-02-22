@@ -14,11 +14,11 @@
         C = 'c'
 
 
-    reveal_type(Color.__next__()) # N: Revealed type is 'main.Color'
-    reveal_type(Strings.__next__()) # N: Revealed type is 'main.Strings'
+    reveal_type(Color.__next__()) # N: Revealed type is "main.Color"
+    reveal_type(Strings.__next__()) # N: Revealed type is "main.Strings"
 
     for color_v in Color:
-      reveal_type(color_v) # N: Revealed type is 'main.Color'
+      reveal_type(color_v) # N: Revealed type is "main.Color"
 
     for string_v in Strings:
-      reveal_type(string_v) # N: Revealed type is 'main.Strings'
+      reveal_type(string_v) # N: Revealed type is "main.Strings"

@@ -50,7 +50,7 @@ So this way we will collide with the original Enum definition in the Python stan
 - which should still work with our plugin however.
 '''
 
-from typing import Type, Optional, Callable, List, Union
+from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 from mypy import nodes, types
 import mypy.plugin
@@ -109,7 +109,9 @@ def _define_method(
 	'''
 	function_type: types.Instance
 	if isinstance(context, mypy.plugin.ClassDefContext):
-		function_type = context.api.named_type('__builtins__.function')
+		function_type = context.api.named_type_or_none('builtins.function')
+		if function_type is None:
+			function_type = context.api.named_type('__builtins__.function')
 	elif isinstance(context, mypy.plugin.AnalyzeTypeContext):
 		function_type = context.api.named_type('builtins.function')
 	else:
@@ -252,7 +254,9 @@ def transform_enum_class_def(context: mypy.plugin.ClassDefContext) -> None:
 	]
 
 	# Create common types handlers
-	str_type = context.api.named_type('__builtins__.str')
+	str_type = context.api.named_type_or_none('builtins.str')
+	if str_type is None:
+		str_type = context.api.named_type('__builtins__.str')
 	# When working with classes in mypy types
 	# the only viable option is to use :code:`Instance` even for the class itself
 	# because even class definition is instance of it's "type".
@@ -276,8 +280,8 @@ def transform_enum_class_def(context: mypy.plugin.ClassDefContext) -> None:
 		'__next__',
 		[
 			nodes.Argument(
-				nodes.Var('self', self_type),
-				self_type,
+				nodes.Var('self', metaclass_type),
+				metaclass_type,
 				None,
 				nodes.ARG_POS,
 			),
@@ -482,14 +486,19 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 	)
 	meta_info.names['_EnumMetaType'] = nodes.SymbolTableNode(nodes.MDEF, self_tvar_expr)
 
-	self_tvar_def = types.TypeVarDef(
+	tvar_def_args: Tuple[Any, ...] = (
 		'_EnumMetaType',
 		f'{get_fullname(meta_info)}._EnumMetaType',
 		-1,
 		[],
 		meta_enum_instance,
 	)
-	self_tvar_type = types.TypeVarType(self_tvar_def)
+	if hasattr(types, 'TypeVarDef'):
+		self_tvar_def = types.TypeVarDef(*tvar_def_args)
+		self_tvar_type = types.TypeVarType(self_tvar_def)
+	else:
+		# Since mypy 0.920 TypeVarType and TypeVarDef were merged under TypeVarType
+		self_tvar_type = types.TypeVarType(*tvar_def_args)
 
 	# Same way with __getitem__
 	_define_method(

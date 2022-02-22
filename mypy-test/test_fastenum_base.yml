@@ -7,10 +7,10 @@
         GREEN = 2
         BLUE = 3
 
-    reveal_type(Color.RED) # N: Revealed type is 'main.Color'
-    reveal_type(Color.GREEN) # N: Revealed type is 'main.Color'
-    reveal_type(Color.GREEN.value) # N: Revealed type is 'Any'
-    reveal_type(Color.GREEN.name) # N: Revealed type is 'builtins.str'
+    reveal_type(Color.RED) # N: Revealed type is "main.Color"
+    reveal_type(Color.GREEN) # N: Revealed type is "main.Color"
+    reveal_type(Color.GREEN.value) # N: Revealed type is "Any"
+    reveal_type(Color.GREEN.name) # N: Revealed type is "builtins.str"
 
 - case: fastenum_base_str
   main: |
@@ -21,7 +21,7 @@
         GREEN = 'b'
         BLUE = 'c'
 
-    reveal_type(Color.RED) # N: Revealed type is 'main.Color'
-    reveal_type(Color.GREEN) # N: Revealed type is 'main.Color'
-    reveal_type(Color.GREEN.value) # N: Revealed type is 'Any'
-    reveal_type(Color.GREEN.name) # N: Revealed type is 'builtins.str'
+    reveal_type(Color.RED) # N: Revealed type is "main.Color"
+    reveal_type(Color.GREEN) # N: Revealed type is "main.Color"
+    reveal_type(Color.GREEN.value) # N: Revealed type is "Any"
+    reveal_type(Color.GREEN.name) # N: Revealed type is "builtins.str"

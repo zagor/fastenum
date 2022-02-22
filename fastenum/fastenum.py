@@ -6,12 +6,12 @@ metaclasses properly.
 More on this topic https://mypy.readthedocs.io/en/latest/metaclasses.html
 '''
 
-from typing import cast, Any, Tuple, Iterator, Type
+from typing import Any, Iterator, SupportsIndex, Tuple, Type, cast
 import collections
 
 
 def _is_descriptor(obj: Any) -> bool:
-	'''Returns True if obj is a descriptor, False otherwise.'''
+	''' Returns True if obj is a descriptor, False otherwise. '''
 	return hasattr(obj, '__get__') or hasattr(obj, '__set__') or hasattr(obj, '__delete__')
 
 
@@ -45,11 +45,11 @@ class EnumMeta(type):
 				member.name = name
 				member.value = value
 				# name and value are not expected to change, so we can cache __repr__ and __hash__.
-				member._repr = '<%s.%s: %r>' % (enum_class.__name__, name, value)
-				member._hash = hash(name)
+				member._repr = '<%s.%s: %r>' % (enum_class.__name__, name, value)  # type: ignore[attr-defined]
+				member._hash = hash(name)  # type: ignore[attr-defined]
 
 				# args = value if isinstance(value, tuple) else (value,)
-				member.__init__()
+				member.__init__()  # type: ignore[misc]
 				setattr(enum_class, name, member)
 				enum_class._member_map_[name] = member  # type: ignore
 				try:
@@ -90,19 +90,22 @@ class EnumMeta(type):
 
 
 class Enum(metaclass = EnumMeta):
+	_repr: str
+	_hash: int
+
 	def __repr__(self) -> str:
 		# cache of `'<%s.%s: %r>' % (self.__class__.__name__, self.name, self.value)`
-		return self._repr  # type: ignore
+		return self._repr
 
 	def __str__(self) -> str:
-		return '%s.%s' % (self.__class__.__name__, self.name)  # type: ignore
+		return '%s.%s' % (self.__class__.__name__, self.name)  # type: ignore[attr-defined]
 
 	def __hash__(self) -> int:
 		# cache of `hash(self.name)`
-		return self._hash  # type: ignore
+		return self._hash
 
 	def __format__(self, format_spec: str) -> str:
 		return str.__format__(str(self), format_spec)
 
-	def __reduce_ex__(self, proto: int) -> Tuple[Type['Enum'], Tuple[Any]]:
+	def __reduce_ex__(self, proto: SupportsIndex) -> Tuple[Type['Enum'], Tuple[Any]]:
 		return self.__class__, (self.value,)  # type: ignore

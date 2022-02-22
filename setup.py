@@ -1,9 +1,10 @@
 import os
+
 from setuptools import setup
 
 
 def read(relpath: str) -> str:
-	with open(os.path.join(os.path.dirname(__file__), relpath)) as f:
+	with open(os.path.join(os.path.dirname(__file__), relpath), encoding = 'utf-8') as f:
 		return f.read()
 
 
