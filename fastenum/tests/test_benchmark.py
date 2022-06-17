@@ -37,7 +37,7 @@ def test_attribute_access(
 	benchmark: pytest_benchmark.fixture.BenchmarkFixture,
 ) -> None:
 	def test() -> None:
-		enum_class.C  # type: ignore # pylint: disable=pointless-statement
+		enum_class.C  # pylint: disable=pointless-statement
 
 	benchmark(test)
 
@@ -48,7 +48,7 @@ def test_getitem_access(
 	benchmark: pytest_benchmark.fixture.BenchmarkFixture,
 ) -> None:
 	def test() -> None:
-		enum_class['C']  # type: ignore # pylint: disable=pointless-statement
+		enum_class['C']  # pylint: disable=pointless-statement
 
 	benchmark(test)
 
@@ -59,7 +59,7 @@ def test_call(
 	benchmark: pytest_benchmark.fixture.BenchmarkFixture,
 ) -> None:
 	def test() -> None:
-		enum_class(3)  # type: ignore
+		enum_class(3)
 
 	benchmark(test)
 

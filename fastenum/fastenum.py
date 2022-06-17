@@ -24,13 +24,11 @@ class EnumMeta(type):
 		# pylint: disable=unused-argument
 		return collections.OrderedDict()
 
-	# Not sure why we get 'Incompatible return type for "__new__" (returns "Enum", but must return
-	#   a subtype of "EnumMeta")' here:
-	def __new__(  # type: ignore
+	def __new__(
 		mcs,
 		cls: str,
 		bases: Tuple[type, ...],
-		classdict: collections.OrderedDict,
+		classdict: collections.OrderedDict,  # type: ignore
 	) -> 'EnumMeta':
 		# pylint: disable=protected-access
 		enum_class = super().__new__(mcs, cls, bases, classdict)
@@ -42,8 +40,8 @@ class EnumMeta(type):
 		for name, value in classdict.items():
 			if not name.startswith('_') and not _is_descriptor(value):
 				member = enum_class.__new__(enum_class)  # type: ignore
-				member.name = name
-				member.value = value
+				member.name = name  # type: ignore
+				member.value = value  # type: ignore
 				# name and value are not expected to change, so we can cache __repr__ and __hash__.
 				member._repr = '<%s.%s: %r>' % (enum_class.__name__, name, value)  # type: ignore[attr-defined]
 				member._hash = hash(name)  # type: ignore[attr-defined]
@@ -59,12 +57,12 @@ class EnumMeta(type):
 				except TypeError:
 					pass
 
-		return cast(EnumMeta, enum_class)
+		return enum_class
 
 	def __call__(cls, value: Any) -> 'Enum':  # type: ignore
 		# For lookups like Color(Color.red)
 		if isinstance(value, cls):
-			return value
+			return cast('Enum', value)
 		# by-value search for a matching enum member
 		# see if it's in the reverse mapping (for hashable values)
 		try:
@@ -73,7 +71,7 @@ class EnumMeta(type):
 			# not there, now do long search -- O(n) behavior
 			for member in cls._member_map_.values():  # type: ignore
 				if member.value == value:
-					return member
+					return cast('Enum', member)
 		raise ValueError('%s is not a valid %s' % (value, cls.__name__))
 
 	def __getitem__(cls, name: str) -> 'Enum':
