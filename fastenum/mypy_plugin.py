@@ -50,7 +50,7 @@ So this way we will collide with the original Enum definition in the Python stan
 - which should still work with our plugin however.
 '''
 
-from typing import Any, Callable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, List, Optional, Tuple, Type, Union, cast
 
 from mypy import nodes, types
 import mypy.plugin
@@ -59,16 +59,12 @@ import mypy.plugin
 # Define under which names the mypy plugin should be registered
 REGISTER = {
 	'fastenum.Enum',
-	# To support for example :code:`controllers.orders.types.fastenum`
-	'.fastenum',
-	# Might hijack Enum from standard library but should still work as expected.
-	# Unfortunately there is no other way to work with :code:`from fastenum import Enum`
-	'Enum',
+	'fastenum.fastenum.Enum',
 }
 
 # This is needed to shadow some classes and ignore them by this plugin
 BLACKLIST = {
-	'FastEnumPlugin',
+	'fastenum.mypy_plugin.FastEnumPlugin',
 	'fastenum.mypy_plugin.Plugin',
 }
 
@@ -77,11 +73,7 @@ def _is_fullname_supported(fullname: str) -> bool:
 	'''
 	Helper function to specify if given fullname is usable by our plugin
 	'''
-	for r in REGISTER:
-		if r in fullname and fullname not in BLACKLIST:
-			return True
-
-	return False
+	return fullname in REGISTER and fullname not in BLACKLIST
 
 
 def _define_method(
@@ -107,20 +99,21 @@ def _define_method(
 	:param cls_info: :code:`TypeInfo` of class where this method should be bound
 	:param namespace: used to build fullname of this method
 	'''
-	function_type: types.Instance
+	function_type: Optional[types.Instance]
 	if isinstance(context, mypy.plugin.ClassDefContext):
 		function_type = context.api.named_type_or_none('builtins.function')
 		if function_type is None:
 			function_type = context.api.named_type('__builtins__.function')
 	elif isinstance(context, mypy.plugin.AnalyzeTypeContext):
-		function_type = context.api.named_type('builtins.function')
+		function_type = context.api.named_type('builtins.function', [])
 	else:
 		raise ValueError('Not supported context type = {}.'.format(type(context)))
+	assert function_type, 'Missing `function` builtin type'
 
-	arg_types: List[Optional[types.Type]] = []
+	arg_types: List[types.Type] = []
 	arg_names: List[str] = []
 	# Kinds are kind of arguments (position, key word,..) see :code:`nodes.ARG_POS` for example.
-	arg_kinds: List[int] = []
+	arg_kinds: List[types.ArgKind] = []
 
 	for arg in arguments:
 		assert arg.type_annotation, 'All arguments must be fully typed.'
@@ -263,6 +256,7 @@ def transform_enum_class_def(context: mypy.plugin.ClassDefContext) -> None:
 	self_type = types.Instance(info, [])
 
 	metaclass_type = info.metaclass_type
+	assert metaclass_type, 'Missing metaclass type'
 
 	# Override __next__ and __getitem__ in the Enum class (for each subclass - each enum)
 	# to properly say that its return values are children instances.
@@ -314,7 +308,7 @@ def transform_enum_class_def(context: mypy.plugin.ClassDefContext) -> None:
 	for name, named_node in info.names.items():
 		# We want to modify only class an instance level variables
 		if isinstance(named_node.node, nodes.Var):
-			node: nodes.Var = info.names[name].node
+			node: nodes.Var = cast(nodes.Var, info.names[name].node)
 
 			# We replace original type (which will be int, str, ...)
 			# with an ``Instance`` of our class itself (not with the base class - Enum).
@@ -395,10 +389,10 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 	added inheritance to any :code:`Enum` inherited class to our fake :code:`Enum`.
 	'''
 	# Find references to some builtins which are often used
-	type_type = context.api.named_type('builtins.type')
-	object_type = context.api.named_type('builtins.object')
-	str_type = context.api.named_type('builtins.str')
-	bool_type = context.api.named_type('builtins.bool')
+	type_type = context.api.named_type('builtins.type', [])
+	object_type = context.api.named_type('builtins.object', [])
+	str_type = context.api.named_type('builtins.str', [])
+	bool_type = context.api.named_type('builtins.bool', [])
 
 	# Define meta class in fake module :code:`_fastenum`
 	# This is roughly equivalent to:
@@ -408,7 +402,7 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 	# in module :code:`_fastenum`.
 	# We have to define two things: :code:`ClassDef` an AST node and it's type definition using :code:`TypeInfo`
 	# :code:`ClassDef` defines only class syntactically all attributes and such will be defined in :code:`TypeInfo`
-	meta_cls = nodes.ClassDef('EnumMeta', nodes.Block([nodes.PassStmt()]), [], [type_type])
+	meta_cls = nodes.ClassDef('EnumMeta', nodes.Block([nodes.PassStmt()]), [], [])
 	meta_cls.fullname = '_fastenum.EnumMeta'
 	meta_info = nodes.TypeInfo(nodes.SymbolTable(), meta_cls, '_fastenum')
 	# We have to define inheritance again, mypy :code:`ClassDef` and :code:`TypeInfo`
@@ -432,7 +426,7 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 		'Enum',
 		nodes.Block([nodes.PassStmt()]),
 		[],
-		[object_type],
+		[],
 		nodes.NameExpr('EnumMeta'),
 	)
 	enum_cls.fullname = '_fastenum.Enum'
@@ -493,12 +487,7 @@ def transform_enum_type(context: mypy.plugin.AnalyzeTypeContext) -> types.Type:
 		[],
 		meta_enum_instance,
 	)
-	if hasattr(types, 'TypeVarDef'):
-		self_tvar_def = types.TypeVarDef(*tvar_def_args)
-		self_tvar_type = types.TypeVarType(self_tvar_def)
-	else:
-		# Since mypy 0.920 TypeVarType and TypeVarDef were merged under TypeVarType
-		self_tvar_type = types.TypeVarType(*tvar_def_args)
+	self_tvar_type = types.TypeVarType(*tvar_def_args)
 
 	# Same way with __getitem__
 	_define_method(
@@ -658,7 +647,7 @@ def get_fullname(x: Union[nodes.FuncBase, nodes.SymbolNode]) -> str:
 	'''
 	Used for compatibility with mypy 0.740; can be dropped once support for 0.740 is dropped.
 	'''
-	fn = x.fullname
+	fn: Union[Callable[[], str], str] = x.fullname
 	return fn() if callable(fn) else fn
 
 
@@ -666,5 +655,5 @@ def get_name(x: Union[nodes.FuncBase, nodes.SymbolNode]) -> str:
 	'''
 	Used for compatibility with mypy 0.740; can be dropped once support for 0.740 is dropped.
 	'''
-	fn = x.fullname
+	fn: Union[Callable[[], str], str] = x.fullname
 	return fn() if callable(fn) else fn

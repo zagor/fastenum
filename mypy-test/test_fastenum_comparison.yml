@@ -1,4 +1,5 @@
 - case: fastenum_comparison
+  disable_cache: true
   main: |
     from fastenum import Enum
 
