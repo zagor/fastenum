@@ -1,27 +1,46 @@
-before_script:
-  - 'pip install --upgrade pip wheel'
-  - 'pip install -r requirements.txt -r dev-requirements.txt'
-
-image: python:3.8.12
-
 variables:
-  PYTHONPATH: '.'
+  PYTHONPATH: .
+  MYPYPATH: .
+  # Clone git in CI faster
+  GIT_DEPTH: 10
 
 
-.base: &base
+default:
+  image: python:3.10
+  before_script:
+    - 'pip install --upgrade pip wheel'
+    - 'pip install -r requirements.txt -r dev-requirements.txt'
   tags:
     - 'docker'
-  except:
-    - tags
+  # Interruptible means CI can stop this job when newer commit for the same branch is pushed. This can be enabled only
+  # when the test doesn't write to some outside state and interrupting the job could break that state.
+  interruptible: true
 
 
-code-quality:
-  <<: *base
-  script:
-    - 'cq'
+stages:
+  - test
 
 
 unittest:
-  <<: *base
+  stage: test
   script:
-    - 'pytest'
+    - 'MYPYPATH=$(pwd) PYTHONPATH=$(pwd) py.test'
+  except:
+    - tags
+  image: python:${PYTHON_VERSION}
+  parallel: &tested-python-versions
+    matrix:
+      - PYTHON_VERSION:
+        - '3.8'
+        - '3.9'
+        - '3.10'
+
+
+code quality:
+  stage: test
+  script:
+    - 'cq'
+  except:
+    - tags
+  image: python:${PYTHON_VERSION}
+  parallel: *tested-python-versions
