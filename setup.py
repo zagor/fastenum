@@ -22,7 +22,8 @@ setup(
 	],
 	package_data = {
 		'fastenum': [
-			'py.typed'
+			'py.typed',
+			'*.pyi',
 		],
 	},
 	classifiers = [
