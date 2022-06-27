@@ -96,7 +96,7 @@ class Enum(metaclass = EnumMeta):
 		return self._repr
 
 	def __str__(self) -> str:
-		return '%s.%s' % (self.__class__.__name__, self.name)  # type: ignore[attr-defined]
+		return '%s.%s' % (self.__class__.__name__, self.name)
 
 	def __hash__(self) -> int:
 		# cache of `hash(self.name)`
