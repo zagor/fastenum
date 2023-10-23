@@ -1,3 +1,4 @@
+#cython: annotation_typing=False
 '''
 Almost all metaclass attributes in these classes
 must be ignored for mypy as mypy does not understand
